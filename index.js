@@ -1,4 +1,4 @@
-const fruits = [
+let fruits = [
   {
     id: 1,
     title: "Apple",
@@ -19,28 +19,68 @@ const fruits = [
   },
 ];
 
-const modal = $.modal({
-  title: "Main Modal",
+const toHtml = (fruit) => `
+<div class="col">
+  <div class="card">
+    <img
+      src="${fruit.img}"
+      class="card-img-top"
+      alt="${fruit.title}"
+      style="max-height: 300px"
+    />
+    <div class="card-body">
+      <h5 class="card-title">${fruit.title}</h5>
+        <a href="#" class="btn btn-primary" data-btn="price" data-id="${fruit.id}">Check price</a>
+        <a href="#" class="btn btn-danger" data-btn="remove" data-id="${fruit.id}">Delete item</a>
+      </div>
+    </div>
+</div>
+`;
+
+function render() {
+  const html = fruits.map(toHtml).join("");
+  document.querySelector("#fruits").innerHTML = html;
+}
+
+render();
+
+const priceModal = $.modal({
+  title: "Price product",
   closable: true,
-  content: `
-    <p>Lorem ipsum dolor sit.</p>
-    <p>Lorem ipsum dolor sit.</p>
-    `,
   width: "400px",
   footerButtons: [
     {
-      text: "Ok",
+      text: "Close",
       type: "primary",
       handler() {
-        modal.close();
-      },
-    },
-    {
-      text: "Cancel",
-      type: "danger",
-      handler() {
-        modal.close();
+        priceModal.close();
       },
     },
   ],
+});
+
+document.addEventListener("click", (event) => {
+  event.preventDefault();
+  const btnType = event.target.dataset.btn;
+  const id = +event.target.dataset.id;
+  const fruit = fruits.find((f) => f.id === id);
+
+  if (btnType === "price") {
+    priceModal.setContent(`
+    <p> Price ${fruit.title}: <strong>${fruit.price}$</strong></p>
+    `);
+    priceModal.open();
+  } else if (btnType === "remove") {
+    $.confirm({
+      title: "Are you sure?",
+      content: `<p>You delete fruit: <strong>${fruit.title}</strong></p>`,
+    })
+      .then(() => {
+        fruits = fruits.filter((f) => f.id !== id);
+        render();
+      })
+      .catch(() => {
+        console.log("Cancel");
+      });
+  }
 });
